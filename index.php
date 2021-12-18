@@ -1,8 +1,31 @@
 <?php
-$question = 'این یک پرسش نمونه است';
-$msg = 'این یک پاسخ نمونه است';
-$en_name = 'hafez';
-$fa_name = 'حافظ';
+    $k =  file_get_contents("people.json"); 
+    $array = json_decode($k, true);
+    $keys = array_keys($array);
+
+    if (empty($_POST["person"])){
+        $question = "";
+        $en_name = $keys[rand(0,15)] ;
+        $msg = "سوال خود را مطرح کنید";
+    }
+    else {
+        $question = $_POST["question"];
+        $en_name = $_POST["person"] ;
+
+        $code = $question.$en_name;
+        $int = intval(hash("crc32", $code), 16);
+
+        $message = file_get_contents("messages.txt");
+        $marray = explode("\n" , $message);
+        $msg = $marray[$int%16];
+        
+        //baraye estefade as آیا dar avval soal
+        $ayya = explode(" " , $question);
+        if ($ayya[0] != "آیا"){
+            $msg = "سوال درستی پرسیده نشده است" ;
+        }
+    }
+    $fa_name = $array[$en_name];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -14,10 +37,19 @@ $fa_name = 'حافظ';
 <body>
 <p id="copyright">تهیه شده برای درس کارگاه کامپیوتر،دانشکده کامییوتر، دانشگاه صنعتی شریف</p>
 <div id="wrapper">
-    <div id="title">
-        <span id="label">پرسش:</span>
+    <?php
+    if (empty($_POST["person"])){
+    echo "<div id=\"title\">
+        <span id=\"label\"></span>";
+    }
+    else{
+        echo "<div id=\"title\">
+        <span id=\"label\">پرسش:</span>";
+    }
+    ?>
         <span id="question"><?php echo $question ?></span>
     </div>
+    
     <div id="container">
         <div id="message">
             <p><?php echo $msg ?></p>
@@ -36,11 +68,16 @@ $fa_name = 'حافظ';
             را از
             <select name="person">
                 <?php
-                /*
-                 * Loop over people data and
-                 * enter data inside `option` tag.
-                 * E.g., <option value="hafez">حافظ</option>
-                 */
+                    for ($i = 0; $i < 16; $i++) {
+                        $cursor = $keys[$i];
+                        $answer = $array[$cursor];
+                        if ($cursor == $en_name){
+                            echo "<option value=\"$cursor\" selected> $answer </option>";
+                        }
+                        else{
+                            echo "<option value=\"$cursor\" > $answer </option>";
+                        }
+                    }
                 ?>
             </select>
             <input type="submit" value="بپرس"/>
